@@ -1,0 +1,633 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-crear-tabla-roles
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: descripcion
+                  type: VARCHAR(255)
+              - column:
+                  name: es_administrador
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 2-crear-tabla-permisos
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: permisos
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recurso
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accion
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 3-crear-tabla-categorias_equipo
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: categorias_equipo
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+  - changeSet:
+      id: 4-crear-tabla-proveedores
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: proveedores
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: contacto
+                  type: VARCHAR(100)
+              - column:
+                  name: telefono
+                  type: VARCHAR(50)
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+              - column:
+                  name: direccion
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 5-crear-tabla-clientes
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: clientes
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: apellido
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: telefono
+                  type: VARCHAR(50)
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+                  constraints:
+                    unique: true
+              - column:
+                  name: documento
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: direccion
+                  type: VARCHAR(255)
+              - column:
+                  name: notas
+                  type: TEXT
+
+  - changeSet:
+      id: 6-crear-tabla-configuraciones
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: configuraciones
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: clave
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: valor
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 7-crear-tabla-usuarios
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: usuarios
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rol_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_usuario_rol
+                    references: roles(id)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 8-crear-tabla-rol_permisos
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: rol_permisos
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: rol_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_rolpermiso_rol
+                    references: roles(id)
+              - column:
+                  name: permiso_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_rolpermiso_permiso
+                    references: permisos(id)
+
+  - changeSet:
+      id: 9-crear-tabla-equipos
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: equipos
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nombre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: categoria_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_equipo_categoria
+                    references: categorias_equipo(id)
+              - column:
+                  name: stock
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: precio_dia
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 10-crear-tabla-ordenes_alquiler
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: ordenes_alquiler
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: cliente_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_orden_alquiler_cliente
+                    references: clientes(id)
+              - column:
+                  name: usuario_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_orden_alquiler_usuario
+                    references: usuarios(id)
+              - column:
+                  name: fecha_evento
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fecha_devolucion
+                  type: DATE
+              - column:
+                  name: estado
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total
+                  type: DECIMAL(12, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 11-crear-tabla-ordenes_compra
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: ordenes_compra
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: proveedor_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_orden_compra_proveedor
+                    references: proveedores(id)
+              - column:
+                  name: usuario_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_orden_compra_usuario
+                    references: usuarios(id)
+              - column:
+                  name: fecha_compra
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total
+                  type: DECIMAL(12, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 12-crear-tabla-ordenes_alquiler_detalle
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: ordenes_alquiler_detalle
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: orden_alquiler_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_detalle_alquiler_orden
+                    references: ordenes_alquiler(id)
+              - column:
+                  name: equipo_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_detalle_alquiler_equipo
+                    references: equipos(id)
+              - column:
+                  name: cantidad
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: precio_unitario
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subtotal
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 13-crear-tabla-ordenes_compra_detalle
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: ordenes_compra_detalle
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: orden_compra_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_detalle_compra_orden
+                    references: ordenes_compra(id)
+              - column:
+                  name: equipo_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_detalle_compra_equipo
+                    references: equipos(id)
+              - column:
+                  name: cantidad
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: costo_unitario
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subtotal
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 14-crear-tabla-checklist_items
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: checklist_items
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: orden_alquiler_detalle_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_checklist_detalle
+                    references: ordenes_alquiler_detalle(id)
+              - column:
+                  name: usuario_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_checklist_usuario
+                    references: usuarios(id)
+              - column:
+                  name: tipo
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: observacion
+                  type: TEXT
+              - column:
+                  name: fecha
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 15-crear-tabla-ordenes_alquiler_historial
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: ordenes_alquiler_historial
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: orden_alquiler_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_historial_alquiler_orden
+                    references: ordenes_alquiler(id)
+              - column:
+                  name: usuario_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_historial_usuario_alquiler
+                    references: usuarios(id)
+              - column:
+                  name: estado_anterior
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado_nuevo
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fecha
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: monto_mora
+                  type: DECIMAL(10, 2)
+
+  - changeSet:
+      id: 16-crear-tabla-ordenes_compra_historial
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: ordenes_compra_historial
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: orden_compra_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_historial_compra_orden
+                    references: ordenes_compra(id)
+              - column:
+                  name: usuario_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_historial_usuario_compra
+                    references: usuarios(id)
+              - column:
+                  name: estado_anterior
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: estado_nuevo
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fecha
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
