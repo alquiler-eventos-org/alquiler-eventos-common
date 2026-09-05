@@ -1,0 +1,187 @@
+openapi: 3.0.3
+info:
+  title: Alquiler Eventos - Modulo Common
+  description: API de ejemplo del modulo compartido. Los microservicios de alquiler y compras consumen este JAR como dependencia.
+  version: 1.0.0
+  contact:
+    name: Equipo Alquiler Eventos
+
+servers:
+  - url: http://localhost:8080/api
+    description: Servidor local de desarrollo
+
+paths:
+  /clientes:
+    get:
+      tags:
+        - Clientes
+      summary: Obtiene el listado completo de clientes
+      operationId: listarClientes
+      responses:
+        '200':
+          description: Lista de clientes obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      tags:
+        - Clientes
+      summary: Registra un nuevo cliente en el sistema
+      operationId: crearCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteCrearRequest'
+      responses:
+        '201':
+          description: Cliente creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          description: Datos de entrada invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /clientes/{id}:
+    get:
+      tags:
+        - Clientes
+      summary: Obtiene un cliente por su identificador
+      operationId: obtenerClientePorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador unico del cliente
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+components:
+  schemas:
+    Cliente:
+      type: object
+      description: Modelo compartido de Cliente utilizado por los microservicios
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Identificador unico del cliente
+        nombre:
+          type: string
+          maxLength: 100
+        apellido:
+          type: string
+          maxLength: 100
+        telefono:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        documento:
+          type: string
+          maxLength: 50
+        direccion:
+          type: string
+          maxLength: 255
+        notas:
+          type: string
+      required:
+        - nombre
+        - apellido
+        - documento
+      example:
+        id: 1
+        nombre: Juan
+        apellido: Perez
+        telefono: "555-1234"
+        email: juan.perez@example.com
+        documento: "30222111"
+        direccion: Av. Siempre Viva 123
+        notas: Cliente habitual del salon principal
+
+    ClienteCrearRequest:
+      type: object
+      description: Payload de entrada para registrar un nuevo cliente
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+        apellido:
+          type: string
+          maxLength: 100
+        telefono:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        documento:
+          type: string
+          maxLength: 50
+        direccion:
+          type: string
+          maxLength: 255
+        notas:
+          type: string
+      required:
+        - nombre
+        - apellido
+        - documento
+      example:
+        nombre: Juan
+        apellido: Perez
+        telefono: "555-1234"
+        email: juan.perez@example.com
+        documento: "30222111"
+        direccion: Av. Siempre Viva 123
+        notas: Cliente habitual del salon principal
+
+    ApiError:
+      type: object
+      description: Error estandarizado devuelto por la API
+      properties:
+        codigo:
+          type: integer
+          format: int32
+        mensaje:
+          type: string
+        ruta:
+          type: string
+        fecha:
+          type: string
+          format: date-time
+      required:
+        - codigo
+        - mensaje

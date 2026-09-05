@@ -139,17 +139,15 @@
                             <output>${project.build.directory}/generated-sources/openapi</output>
                             <apiPackage>com.alquilereventos.common.api</apiPackage>
                             <modelPackage>com.alquilereventos.common.dto</modelPackage>
-                            <additionalProperties>
-                                <dateLibrary>java8</dateLibrary>
-                                <useJakartaEe>true</useJakartaEe>
-                                <openApiNullable>true</openApiNullable>
-                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                            </additionalProperties>
                             <configOptions>
                                 <sourceFolder>src/main/java</sourceFolder>
                                 <dateLibrary>java8</dateLibrary>
                                 <useJakartaEe>true</useJakartaEe>
                                 <openApiNullable>true</openApiNullable>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <generateApis>false</generateApis>
+                                <generateSupportingFiles>false</generateSupportingFiles>
                             </configOptions>
                         </configuration>
                     </execution>
