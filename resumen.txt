@@ -1,0 +1,129 @@
+====================================================================
+RESUMEN DEL PROYECTO
+Sistema de Alquiler de Equipos de Eventos
+Materia: Sistemas Web y Distribuidos - 7mo Semestre
+Integrantes: Tobías Huber / Setrini
+====================================================================
+
+TEMA
+--------------------------------------------------------------------
+Sistema de alquiler de equipos para eventos (sonido, mesas, sillas,
+carpas), con gestión de reservas, entregas, devoluciones, mora por
+atraso, y compras a proveedores para reposición de stock.
+
+====================================================================
+ARQUITECTURA GENERAL
+====================================================================
+
+El sistema está armado como MICROSERVICIOS (no monolito):
+
+- Frontend: aplicación única (SPA)
+- Backend: dos microservicios independientes, uno por integrante
+- Común: librería compartida entre ambos microservicios
+- Base de datos: una sola instancia PostgreSQL compartida entre
+  los dos microservicios (database-per-service no se usó, se
+  decidió por simplicidad para el alcance del semestre)
+
+REPOSITORIOS (organización de GitHub: alquiler-eventos-org)
+--------------------------------------------------------------------
+- alquiler-eventos-ui          -> Frontend
+- alquiler-eventos-common      -> Módulo compartido (entidades,
+                                   repositorios, config de DB)
+- alquiler-eventos-ms-alquiler -> Microservicio de Órdenes de
+                                   Alquiler (Tobi)
+- alquiler-eventos-ms-compras  -> Microservicio de Órdenes de
+                                   Compra a Proveedores (Setrini)
+
+====================================================================
+STACK Y LENGUAJES
+====================================================================
+
+BACKEND
+--------------------------------------------------------------------
+Lenguaje:            Java 21 (LTS, distribución Temurin)
+Framework:           Spring Boot 3.4.5
+Build tool:          Maven 3.9+
+Persistencia:        Spring Data JPA
+Proveedor JPA:       Hibernate (modo "validate", no autogenera
+                      el esquema)
+Migraciones de DB:   Liquibase (versiona y crea las tablas)
+Driver de DB:        PostgreSQL JDBC Driver
+Documentación API:   SpringDoc OpenAPI 2.6.0
+Generación de DTOs:  OpenAPI Generator (Maven plugin) a partir de
+                      un archivo openapi.yaml
+Boilerplate:         Lombok (getters/setters/constructores)
+Utilidades:          Jackson Databind Nullable, Reflections
+
+FRONTEND
+--------------------------------------------------------------------
+Librería:            React
+Bundler:              Vite
+Estilos:              Tailwind CSS
+Ruteo:                 React Router DOM
+HTTP client:           Axios
+
+BASE DE DATOS
+--------------------------------------------------------------------
+Motor:                PostgreSQL 17
+Hosting:              Supabase (plan gratuito)
+Conexión:              Pooler de Supabase (Supavisor), modo
+                      session (puerto 5432) para migraciones
+Administración:        Dashboard web de Supabase + DBeaver
+                      (cliente ligero de escritorio)
+
+HERRAMIENTAS DE DISEÑO Y MODELADO
+--------------------------------------------------------------------
+Wireframes/pantallas:  Figma
+Diagrama ERD:           Lucidchart
+
+CONTROL DE VERSIONES
+--------------------------------------------------------------------
+Git + GitHub (organización compartida entre los 2 integrantes)
+
+====================================================================
+MODELO DE DATOS (16 tablas)
+====================================================================
+
+Seguridad / usuarios:
+- Usuario, Rol, Permiso, RolPermiso, Configuracion
+
+Maestros de negocio:
+- Cliente, Proveedor, CategoriaEquipo, Equipo
+
+Alquileres:
+- OrdenAlquiler, OrdenAlquilerDetalle, ChecklistItem
+
+Compras:
+- OrdenCompra, OrdenCompraDetalle
+
+Historial (auditoría):
+- OrdenAlquilerHistorial, OrdenCompraHistorial
+  (ambas heredan de una clase abstracta común HistorialEstado,
+  usando @MappedSuperclass - demuestra herencia y abstracción)
+
+====================================================================
+FUNCIONALIDADES PRINCIPALES
+====================================================================
+
+- Autenticación (JWT) y autorización por roles
+- 3 roles: Admin, Encargado de depósito, Encargado de compras
+- 2 formularios cabecera-detalle: Orden de Alquiler (Tobi) y
+  Orden de Compra a Proveedores (Setrini)
+- Transacciones: reserva -> entrega -> devolución -> mora
+  (alquiler) / pendiente -> confirmada -> recibida (compra)
+- Cron jobs: marcar órdenes vencidas, recordatorios de
+  devolución por mail
+- Envío de mails (confirmaciones, recordatorios, contacto)
+- Reportes: equipos más alquilados, ingresos por período, atrasos
+- Búsquedas y paginación en los listados
+- Panel de configuraciones (tarifas, plantillas, categorías)
+
+====================================================================
+NOTAS
+====================================================================
+- El proyecto inicialmente se planteó con Node.js + Express +
+  Prisma, pero se migró a Java + Spring Boot + Liquibase por
+  decisión del equipo.
+- La base de datos es compartida entre los dos microservicios
+  (no hay una DB separada por servicio).
+====================================================================
