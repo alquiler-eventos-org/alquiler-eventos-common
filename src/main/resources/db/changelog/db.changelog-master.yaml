@@ -631,3 +631,31 @@ databaseChangeLog:
                   defaultValueComputed: CURRENT_TIMESTAMP
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 17-agregar-activo-en-proveedores
+      author: alquilereventos
+      changes:
+        - addColumn:
+            tableName: proveedores
+            columns:
+              - column:
+                  name: activo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 18-agregar-activo-en-clientes
+      author: alquilereventos
+      changes:
+        - addColumn:
+            tableName: clientes
+            columns:
+              - column:
+                  name: activo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false

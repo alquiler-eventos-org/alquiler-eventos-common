@@ -31,6 +31,12 @@ public class Proveedor {
 
     private String direccion;
 
+    /**
+     * Borrado logico: false = eliminado.
+     */
+    @Column(nullable = false)
+    private Boolean activo = Boolean.TRUE;
+
     @OneToMany(mappedBy = "proveedor", fetch = FetchType.LAZY)
     private List<OrdenCompra> ordenesCompra;
 }

@@ -4,5 +4,6 @@ public enum EstadoOrdenAlquiler {
     RESERVA,
     ENTREGA,
     DEVOLUCION,
-    MORA
+    MORA,
+    ANULADA
 }

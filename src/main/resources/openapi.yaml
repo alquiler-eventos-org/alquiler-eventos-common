@@ -86,7 +86,372 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiError'
 
+  /proveedores:
+    get:
+      tags:
+        - Proveedores
+      summary: Obtiene el listado paginado de proveedores activos
+      operationId: listarProveedores
+      parameters:
+        - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/TamanoPagina'
+      responses:
+        '200':
+          description: Pagina de proveedores obtenida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProveedor'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      tags:
+        - Proveedores
+      summary: Registra un nuevo proveedor
+      operationId: crearProveedor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProveedorCrearRequest'
+      responses:
+        '201':
+          description: Proveedor creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proveedor'
+        '400':
+          description: Datos de entrada invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /proveedores/buscar:
+    get:
+      tags:
+        - Proveedores
+      summary: Busca proveedores activos con filtros y paginacion
+      operationId: buscarProveedores
+      parameters:
+        - name: nombre
+          in: query
+          description: Filtro por nombre (coincidencia parcial)
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Filtro por email (coincidencia parcial)
+          schema:
+            type: string
+        - name: contacto
+          in: query
+          description: Filtro por contacto (coincidencia parcial)
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/TamanoPagina'
+      responses:
+        '200':
+          description: Pagina de proveedores que cumplen los filtros
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProveedor'
+
+  /proveedores/{id}:
+    get:
+      tags:
+        - Proveedores
+      summary: Obtiene un proveedor por su identificador
+      operationId: obtenerProveedorPorId
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      responses:
+        '200':
+          description: Proveedor encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proveedor'
+        '404':
+          description: Proveedor no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      tags:
+        - Proveedores
+      summary: Actualiza los datos de un proveedor
+      operationId: actualizarProveedor
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProveedorCrearRequest'
+      responses:
+        '200':
+          description: Proveedor actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proveedor'
+        '404':
+          description: Proveedor no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    delete:
+      tags:
+        - Proveedores
+      summary: Elimina logicamente un proveedor (activo = false)
+      operationId: eliminarProveedor
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      responses:
+        '200':
+          description: Proveedor desactivado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proveedor'
+        '404':
+          description: Proveedor no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /ordenes-compra:
+    get:
+      tags:
+        - OrdenesCompra
+      summary: Obtiene el listado paginado de ordenes de compra con filtros
+      operationId: listarOrdenesCompra
+      parameters:
+        - name: estado
+          in: query
+          description: Filtro por estado de la orden
+          schema:
+            $ref: '#/components/schemas/EstadoOrdenCompra'
+        - name: proveedorId
+          in: query
+          description: Filtro por proveedor
+          schema:
+            type: integer
+            format: int32
+        - name: fechaDesde
+          in: query
+          description: Fecha de compra desde (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: fechaHasta
+          in: query
+          description: Fecha de compra hasta (inclusive)
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/TamanoPagina'
+      responses:
+        '200':
+          description: Pagina de ordenes de compra obtenida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOrdenCompra'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      tags:
+        - OrdenesCompra
+      summary: Registra una nueva orden de compra con sus detalles
+      operationId: crearOrdenCompra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenCompraCrearRequest'
+      responses:
+        '201':
+          description: Orden de compra creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenCompra'
+        '400':
+          description: Datos de entrada invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /ordenes-compra/{id}:
+    get:
+      tags:
+        - OrdenesCompra
+      summary: Obtiene una orden de compra por su identificador
+      operationId: obtenerOrdenCompraPorId
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      responses:
+        '200':
+          description: Orden de compra encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenCompra'
+        '404':
+          description: Orden de compra no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      tags:
+        - OrdenesCompra
+      summary: Actualiza una orden de compra (solo si esta PENDIENTE)
+      operationId: actualizarOrdenCompra
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenCompraCrearRequest'
+      responses:
+        '200':
+          description: Orden de compra actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenCompra'
+        '400':
+          description: La orden no puede modificarse en su estado actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Orden de compra no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    delete:
+      tags:
+        - OrdenesCompra
+      summary: Elimina logicamente una orden (estado ANULADA, solo si esta PENDIENTE)
+      operationId: eliminarOrdenCompra
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      responses:
+        '200':
+          description: Orden de compra anulada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenCompra'
+        '400':
+          description: Solo pueden anularse ordenes en estado PENDIENTE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Orden de compra no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /ordenes-compra/{id}/estado:
+    put:
+      tags:
+        - OrdenesCompra
+      summary: Cambia el estado de la orden (CONFIRMADA, RECIBIDA o ANULADA)
+      operationId: cambiarEstadoOrdenCompra
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenCompraEstadoRequest'
+      responses:
+        '200':
+          description: Estado actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenCompra'
+        '400':
+          description: Transicion de estado invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Orden de compra no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
 components:
+  parameters:
+    Pagina:
+      name: page
+      in: query
+      description: Numero de pagina (empezando en 0)
+      schema:
+        type: integer
+        format: int32
+        default: 0
+
+    TamanoPagina:
+      name: size
+      in: query
+      description: Cantidad de registros por pagina
+      schema:
+        type: integer
+        format: int32
+        default: 10
+
+    IdEnPath:
+      name: id
+      in: path
+      required: true
+      description: Identificador unico del recurso
+      schema:
+        type: integer
+        format: int32
+
   schemas:
     Cliente:
       type: object
@@ -117,8 +482,13 @@ components:
           maxLength: 255
         notas:
           type: string
+        activo:
+          type: boolean
+          readOnly: true
+          description: Indica si el cliente esta activo (borrado logico)
       required:
         - nombre
+
         - apellido
         - documento
       example:
@@ -185,3 +555,232 @@ components:
       required:
         - codigo
         - mensaje
+
+    Proveedor:
+      type: object
+      description: Modelo compartido de Proveedor utilizado por los microservicios
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Identificador unico del proveedor
+        nombre:
+          type: string
+          maxLength: 100
+        contacto:
+          type: string
+          maxLength: 100
+        telefono:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        direccion:
+          type: string
+          maxLength: 255
+        activo:
+          type: boolean
+          readOnly: true
+          description: Indica si el proveedor esta activo (borrado logico)
+      required:
+        - nombre
+      example:
+        id: 1
+        nombre: Sonido Paraguay SRL
+        contacto: Carlos Gomez
+        telefono: "0981-123456"
+        email: ventas@sonidopy.com
+        direccion: Av. Mcal. Lopez 1234
+        activo: true
+
+    ProveedorCrearRequest:
+      type: object
+      description: Payload de entrada para registrar o actualizar un proveedor
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+        contacto:
+          type: string
+          maxLength: 100
+        telefono:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        direccion:
+          type: string
+          maxLength: 255
+      required:
+        - nombre
+      example:
+        nombre: Sonido Paraguay SRL
+        contacto: Carlos Gomez
+        telefono: "0981-123456"
+        email: ventas@sonidopy.com
+        direccion: Av. Mcal. Lopez 1234
+
+    PageProveedor:
+      type: object
+      description: Pagina de resultados de proveedores
+      properties:
+        contenido:
+          type: array
+          items:
+            $ref: '#/components/schemas/Proveedor'
+        totalElementos:
+          type: integer
+          format: int64
+        numeroPagina:
+          type: integer
+          format: int32
+        tamanoPagina:
+          type: integer
+          format: int32
+
+    EstadoOrdenCompra:
+      type: string
+      description: Estados posibles de una orden de compra
+      enum:
+        - PENDIENTE
+        - CONFIRMADA
+        - RECIBIDA
+        - ANULADA
+
+    OrdenCompraDetalle:
+      type: object
+      description: Linea de detalle de una orden de compra
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Identificador unico del detalle
+        equipoId:
+          type: integer
+          format: int32
+          description: Identificador del equipo comprado
+        cantidad:
+          type: integer
+          format: int32
+          minimum: 1
+        costoUnitario:
+          type: number
+          format: double
+          description: Costo por unidad del equipo
+        subtotal:
+          type: number
+          format: double
+          readOnly: true
+          description: Calculado por el servidor (cantidad * costoUnitario)
+      required:
+        - equipoId
+        - cantidad
+        - costoUnitario
+
+    OrdenCompra:
+      type: object
+      description: Orden de compra a proveedores (cabecera con detalles)
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Identificador unico de la orden
+        proveedorId:
+          type: integer
+          format: int32
+          description: Identificador del proveedor
+        usuarioId:
+          type: integer
+          format: int32
+          description: Identificador del usuario que registro la orden
+        fechaCompra:
+          type: string
+          format: date
+        estado:
+          $ref: '#/components/schemas/EstadoOrdenCompra'
+        total:
+          type: number
+          format: double
+          readOnly: true
+          description: Calculado por el servidor como suma de subtotales
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        detalles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdenCompraDetalle'
+      required:
+        - proveedorId
+        - usuarioId
+        - fechaCompra
+        - detalles
+      example:
+        id: 1
+        proveedorId: 1
+        usuarioId: 1
+        fechaCompra: "2026-09-20"
+        estado: PENDIENTE
+        total: 1500.00
+        detalles:
+          - equipoId: 1
+            cantidad: 10
+            costoUnitario: 150.00
+            subtotal: 1500.00
+
+    OrdenCompraCrearRequest:
+      type: object
+      description: Payload de entrada para registrar o actualizar una orden de compra
+      properties:
+        proveedorId:
+          type: integer
+          format: int32
+        usuarioId:
+          type: integer
+          format: int32
+        fechaCompra:
+          type: string
+          format: date
+        detalles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrdenCompraDetalle'
+      required:
+        - proveedorId
+        - usuarioId
+        - fechaCompra
+        - detalles
+
+    OrdenCompraEstadoRequest:
+      type: object
+      description: Payload para cambiar el estado de una orden de compra
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoOrdenCompra'
+      required:
+        - estado
+
+    PageOrdenCompra:
+      type: object
+      description: Pagina de resultados de ordenes de compra
+      properties:
+        contenido:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdenCompra'
+        totalElementos:
+          type: integer
+          format: int64
+        numeroPagina:
+          type: integer
+          format: int32
+        tamanoPagina:
+          type: integer
+          format: int32

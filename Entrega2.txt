@@ -1,0 +1,462 @@
+====================================================================
+ENTREGA 2 - GUIA COMPLETA DE TRABAJO
+Sistema de Alquiler de Equipos de Eventos
+Materia: Sistemas Web y Distribuidos - 7mo Semestre
+Integrantes: Tobias Huber (ms-alquiler) / Setrini (ms-compras)
+Fecha de entrega: 26 de septiembre
+====================================================================
+
+COMO USAR ESTE ARCHIVO
+  Seccion 1: que exige la rubrica de la entrega 2.
+  Seccion 2: que quedo implementado en common (usable ya, sin modificar).
+  Seccion 3: como se conecta todo.
+  Seccion 4: tareas de cada uno (Setrini y Tobi).
+  Seccion 5: paso a paso para armar el microservicio.
+  Seccion 6: reglas de trabajo en equipo (git).
+  Seccion 7: checklist final (control exacto de la rubrica).
+  Seccion 8: cronograma sugerido.
+
+====================================================================
+SECCION 1 - QUE PIDE LA ENTREGA 2
+====================================================================
+
+Cada integrante desarrolla UN microservicio independiente en Java +
+Spring Boot. Los dos juntos forman el sistema integrado, conectados
+a la MISMA base de datos remota PostgreSQL (Supabase) de la entrega 1.
+
+1.1 ESTRUCTURA MINIMA DE DATOS (por microservicio)
+- Al menos 1 entidad simple (sin relaciones complejas).
+- Al menos 1 entidad con relacion muchos-a-muchos, gestionando
+  correctamente su asociacion.
+- Para entidades de otros dominios: usar las clases del JAR common
+  de la entrega 1 SIN modificar su definicion.
+
+   Como lo cumplimos:
+   - Setrini:  entidad simple = Proveedor
+               entidad M:N    = OrdenCompra <-> Equipo
+               (la asociacion se gestiona via OrdenCompraDetalle)
+   - Tobi:     entidad simple = Cliente
+               entidad M:N    = OrdenAlquiler <-> Equipo
+               (via OrdenAlquilerDetalle) + ChecklistItem
+
+1.2 ARQUITECTURA Y CAPAS
+- Patron estandar Spring: controller -> service -> repository (+ dto).
+- IoC con @RestController, @Service, @Repository, etc.
+- PROHIBIDO saltarse capas: el controller NUNCA llama a un
+  repository directo; todo pasa por el service.
+- Especializacion por entidad: cada clase trabaja UN solo tipo de
+  entidad. Los servicios/repositorios de APOYO (ej. Equipo) no
+  necesitan controller expuesto (la rubrica lo permite conversado
+  en grupo; aqui queda documentado como se cumple).
+- Jerarquia de clases para reutilizar codigo transversal:
+  interfaz generica Mapper<E, D> implementada por todos los mappers.
+- Entities y DTOs: usar las clases del JAR SIN modificarlas.
+- Mapeo bidireccional DTO <-> Entity.
+- Persistencia con Spring Data JPA.
+
+1.3 OPERACIONES REST OBLIGATORIAS (verbos y codigos HTTP correctos)
+- POST   crear                              -> 201 (400 si invalido)
+- PUT    actualizar                         -> 200 (404/400 si corresponde)
+- GET    /{id} obtener por id               -> 200 (404 si no existe)
+- GET    listar CON PAGINACION OBLIGATORIA  -> 200
+- GET    buscar con filtros + paginacion    -> 200
+- DELETE borrado LOGICO (marcar inactivo)   -> 200 (404 si no existe)
+
+1.4 REQUISITOS TECNICOS TRANSVERSALES
+- Maven resuelve el JAR common como dependencia.
+- TODO configurable (application.yml + variables de entorno).
+- Manejo centralizado de excepciones (@RestControllerAdvice) con
+  respuestas estandarizadas (DTO ApiError del JAR) y ocultamiento
+  de errores tecnicos (nunca filtrar stacktrace al cliente).
+- Logs en disco con SLF4J/Logback y niveles por capa:
+  Controller: INFO  (solicitudes entrantes/salientes)
+  Service:    INFO/DEBUG (pasos clave de la logica de negocio)
+  Repository: DEBUG (consultas SQL importantes)
+- Swagger/OpenAPI documentando todos los endpoints.
+- Conexion obligatoria a la BD remota compartida (Supabase).
+
+====================================================================
+SECCION 2 - QUE QUEDO LISTO EN COMMON (PARA USAR SIN MODIFICAR)
+====================================================================
+
+Estado actual del repo alquiler-eventos-common (rama main):
+
+2.1 MODELO DE DATOS (16 entidades, paquete entity)
+- Seguridad: Usuario, Rol, Permiso, RolPermiso, Configuracion
+- Maestros:  Cliente, Proveedor, CategoriaEquipo, Equipo
+- Alquiler:  OrdenAlquiler, OrdenAlquilerDetalle, ChecklistItem
+- Compras:   OrdenCompra, OrdenCompraDetalle
+- Historial: OrdenAlquilerHistorial, OrdenCompraHistorial
+  (heredan de HistorialEstado con @MappedSuperclass: ahi estan la
+  herencia, abstraccion, encapsulacion y polimorfismo de la entrega 1)
+
+2.2 CAMBIOS NUEVOS PARA LA ENTREGA 2
+a) pom.xml: classifier "exec" en spring-boot-maven-plugin.
+   Ahora el JAR normal (alquiler-eventos-common-1.0.0-SNAPSHOT.jar)
+   es la LIBRERIA que consumen los microservicios, y el ejecutable
+   se publica aparte (-exec.jar). Sin esto los ms NO podian usar
+   las clases del JAR.
+
+b) Borrado logico de ordenes: se agrego ANULADA a los enums
+   EstadoOrdenCompra y EstadoOrdenAlquiler. No requiere cambios en
+   la BD (la columna estado es VARCHAR).
+
+c) Borrado logico de maestros: campo nuevo "activo" (Boolean) en
+   Proveedor y Cliente + changeSets Liquibase 17 y 18 que agregan
+   la columna activo BOOLEAN NOT NULL DEFAULT TRUE a las tablas
+   proveedores y clientes. Liquibase lo ejecuta solo al arrancar
+   la app por primera vez.
+
+d) Queries de busqueda con filtros + paginacion en los repos:
+   - ProveedorRepository.buscar(nombre, email, contacto, pageable)
+     (siempre excluye activo = false)
+   - ClienteRepository.buscar(nombre, apellido, documento, email, pageable)
+     (siempre excluye activo = false)
+   - OrdenCompraRepository.buscar(estado, proveedorId, fechaDesde,
+     fechaHasta, pageable)
+   - OrdenAlquilerRepository.buscar(estado, clienteId, fechaDesde,
+     fechaHasta, pageable)
+
+e) openapi.yaml ampliado (los DTO se generan solos al compilar):
+   DTOs nuevos: Proveedor, ProveedorCrearRequest, PageProveedor,
+   OrdenCompra, OrdenCompraDetalle, OrdenCompraCrearRequest,
+   OrdenCompraEstadoRequest, PageOrdenCompra, EstadoOrdenCompra
+   (enum), y el campo activo agregado al DTO Cliente.
+   Endpoints documentados: /proveedores (CRUD + /buscar) y
+   /ordenes-compra (CRUD + /{id}/estado).
+   DTOs previos: Cliente, ClienteCrearRequest, ApiError.
+   Parametros reutilizables: Pagina (page), TamanoPagina (size),
+   IdEnPath (id en path).
+
+2.3 COMO DEJAR TU COPIA AL DIA (hacerlo los dos, 5 minutos)
+   git clone https://github.com/alquiler-eventos-org/alquiler-eventos-common.git
+   (o git pull si ya lo tenes clonado)
+   # requiere JDK 21 y Maven 3.9+
+   mvn clean install
+   -> deja el JAR instalado en el repo local de Maven (~/.m2),
+      listo para que tu microservicio lo declare como dependencia.
+
+   NOTA WINDOWS: si Maven da el error "release version 21 not
+   supported", tu JAVA_HOME apunta a otro JDK. Apuntarlo al JDK 21
+   (por ej. C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot)
+   y en IntelliJ: File > Project Structure > SDK 21.
+
+2.4 QUE NO SE TOCA DE COMMON SIN ACUERDO
+- Entidades, enums y repos son compartidos: todo cambio nuevo va
+  con rama feature/* + Pull Request y review del otro.
+- El openapi.yaml se edita por secciones separadas (Tobi: alquiler;
+  Setrini: compras) para evitar conflictos de merge.
+
+====================================================================
+SECCION 3 - ARQUITECTURA DE LA ENTREGA 2
+====================================================================
+
+   alquiler-eventos-ui (React)          [despues de la entrega 2]
+          |  HTTP JSON
+          +---------------------+----------------------+
+          |                                            |
+   ms-alquiler (8081) Tobi                ms-compras (8082) Setrini
+   - Cliente (CRUD)                       - Proveedor (CRUD)
+   - OrdenAlquiler + Detalle              - OrdenCompra + Detalle
+   - ChecklistItem                        - (estado + historial)
+   - (estado + historial + mora)          |
+          |                                            |
+          +--------> ambos dependen del JAR common <----------+
+          |                                            |
+          +----------------> PostgreSQL (Supabase) <---+
+                     UNA sola BD compartida
+
+- Ambos ms declaran en su pom.xml:
+  com.alquilereventos:alquiler-eventos-common:1.0.0-SNAPSHOT
+- Ambos usan las MISMAS variables de entorno (DB_URL, DB_USER,
+  DB_PASSWORD) apuntando a Supabase.
+- hibernate ddl-auto: validate (Liquibase es el UNICO que cambia la BD).
+- Puertos distintos (8081 / 8082) para correr los dos a la vez.
+
+====================================================================
+SECCION 4 - QUE HACE CADA UNO
+====================================================================
+
+4.1 SETRINI - alquiler-eventos-ms-compras
+Rol del usuario en el sistema: Encargado de Compras.
+
+CLASES (paquete base sugerido: com.alquilereventos.compras):
+- controller/
+   ProveedorController      -> endpoints /api/proveedores
+   OrdenCompraController    -> endpoints /api/ordenes-compra
+- service/
+   ProveedorService
+   OrdenCompraService       (tambien maneja detalles e historial)
+- mapper/
+   Mapper<E, D>             (interfaz generica: jerarquia de clases)
+   ProveedorMapper
+   OrdenCompraMapper
+- exception/
+   ApiExceptionHandler      (@RestControllerAdvice central)
+   RecursoNoEncontradoException   -> 404
+   ReglaNegocioException          -> 400
+(los repositories YA VIENEN del JAR common: no se duplican)
+
+ENTIDADES QUE USA (todas del JAR):
+- Proveedor             -> entidad SIMPLE (CRUD propio)
+- OrdenCompra           -> cabecera (CRUD propio)
+- OrdenCompraDetalle    -> la asociacion M:N con Equipo (sin controller;
+                           la maneja OrdenCompraService con cascade)
+- Equipo, Usuario       -> repositorios de APOYO (sin controller)
+- OrdenCompraHistorial  -> auditoria de cambios de estado
+
+ENDPOINTS A IMPLEMENTAR:
+Proveedores:
+  POST   /api/proveedores                              201 / 400
+  PUT    /api/proveedores/{id}                         200 / 404
+  GET    /api/proveedores/{id}                         200 / 404
+  GET    /api/proveedores?page&size                    200 (solo activos)
+  GET    /api/proveedores/buscar?nombre=&email=&contacto=&page&size   200
+  DELETE /api/proveedores/{id}                         200 / 404
+         (borrado logico: activo = false, no borra la fila)
+
+Ordenes de compra:
+  POST   /api/ordenes-compra                           201 / 400
+         (valida proveedor y equipos, calcula subtotal de cada
+          linea y total, estado inicial PENDIENTE, guarda historial)
+  PUT    /api/ordenes-compra/{id}                      200 / 400 / 404
+         (solo si esta PENDIENTE)
+  GET    /api/ordenes-compra/{id}                      200 / 404
+  GET    /api/ordenes-compra?estado=&proveedorId=&fechaDesde=&fechaHasta=&page&size   200
+  DELETE /api/ordenes-compra/{id}                      200 / 400 / 404
+         (borrado logico: estado ANULADA, solo si esta PENDIENTE)
+  PUT    /api/ordenes-compra/{id}/estado               200 / 400 / 404
+         transiciones validas:
+           PENDIENTE  -> CONFIRMADA
+           CONFIRMADA -> RECIBIDA   (al recibir: SUMAR stock al equipo)
+           PENDIENTE  -> ANULADA    (borrado logico)
+
+REGLAS DE NEGOCIO (logica del service):
+- subtotal de cada detalle = cantidad * costoUnitario (lo calcula
+  el servidor, el cliente NO lo manda).
+- total de la orden = suma de los subtotales.
+- no se puede modificar ni anular una orden CONFIRMADA o RECIBIDA.
+- al RECIBIR la compra: equipo.stock = equipo.stock + cantidad por
+  cada detalle, y registrar el cambio de estado en el historial
+  (usa la herencia de HistorialEstado de la entrega 1).
+- un proveedor inactivo (activo=false) no puede usarse en ordenes
+  nuevas (regla 400).
+
+4.2 TOBI - alquiler-eventos-ms-alquiler
+Rol del usuario en el sistema: Encargado de Deposito (y Admin).
+Espejo exacto de lo anterior con su dominio:
+
+CLASES (paquete base sugerido: com.alquilereventos.alquiler):
+- controller/  ClienteController (/api/clientes),
+               OrdenAlquilerController (/api/ordenes-alquiler)
+- service/     ClienteService, OrdenAlquilerService
+- mapper/      Mapper<E,D>, ClienteMapper, OrdenAlquilerMapper
+- exception/   ApiExceptionHandler + las mismas excepciones
+
+ENTIDADES QUE USA (todas del JAR):
+- Cliente                -> entidad SIMPLE (CRUD propio)
+- OrdenAlquiler          -> cabecera (CRUD propio)
+- OrdenAlquilerDetalle   -> la asociacion M:N con Equipo
+- ChecklistItem          -> checklist de entrega/devolucion (sin controller)
+- Equipo, Usuario        -> repositorios de APOYO
+- OrdenAlquilerHistorial -> auditoria (con montoMora)
+
+ENDPOINTS A IMPLEMENTAR:
+Clientes:
+  POST   /api/clientes                                 201 / 400
+  PUT    /api/clientes/{id}                            200 / 404
+  GET    /api/clientes/{id}                            200 / 404
+  GET    /api/clientes?page&size                       200 (solo activos)
+  GET    /api/clientes/buscar?nombre=&apellido=&documento=&email=&page&size   200
+  DELETE /api/clientes/{id}                            200 / 404
+         (borrado logico: activo = false)
+
+Ordenes de alquiler:
+  POST   /api/ordenes-alquiler                         201 / 400
+         (valida cliente, stock disponible y fechas; calcula
+          subtotal/total; estado inicial RESERVA; historial)
+  PUT    /api/ordenes-alquiler/{id}                    200 / 400 / 404
+  GET    /api/ordenes-alquiler/{id}                    200 / 404
+  GET    /api/ordenes-alquiler?estado=&clienteId=&fechaDesde=&fechaHasta=&page&size   200
+  DELETE /api/ordenes-alquiler/{id}                    200 / 400 / 404
+         (borrado logico: ANULADA, solo si esta en RESERVA)
+  PUT    /api/ordenes-alquiler/{id}/estado             200 / 400 / 404
+         transiciones validas:
+           RESERVA    -> ENTREGA    (descuenta stock)
+           ENTREGA    -> DEVOLUCION (devuelve stock)
+           con atraso -> MORA       (calcula montoMora)
+           RESERVA    -> ANULADA    (borrado logico)
+
+REGLAS DE NEGOCIO:
+- no alquilar mas stock del disponible (regla 400).
+- subtotal = cantidad * precioDia * dias del alquiler.
+- un cliente inactivo no puede usarse en ordenes nuevas.
+- todo cambio de estado queda en OrdenAlquilerHistorial.
+
+4.3 TAREAS COMUNES DE LOS DOS
+- Borrado logico SIEMPRE: DELETE nunca borra filas; marca inactivo
+  (activo=false en maestros, ANULADA en ordenes).
+- Paginacion SIEMPRE en los listados (nunca devolver todo).
+- Responder SIEMPRE con DTOs del JAR (mapear entity <-> dto).
+- Errores estandarizados con el DTO ApiError del JAR.
+- Logs a disco (logback-spring.xml) con ruta configurable.
+- Swagger funcionando y todos los endpoints documentados.
+- README del repo: como correr, variables de entorno, endpoints.
+
+====================================================================
+SECCION 5 - PASO A PASO PARA ARMAR EL MICROSERVICIO
+====================================================================
+(Mismo procedimiento para los dos; solo cambia el dominio)
+
+PASO 1. Clonar tu repo y crear el proyecto
+  git clone https://github.com/alquiler-eventos-org/alquiler-eventos-ms-compras.git
+  (o ms-alquiler para Tobi)
+  Crear el proyecto con Spring Initializr (start.spring.io) o a mano:
+  - Maven, Java 21, Spring Boot 3.4.5
+  - Dependencias: Spring Web, Spring Data JPA, Validation,
+    PostgreSQL Driver, Lombok
+  - Agregar springdoc-openapi-starter-webmvc-ui 2.6.0
+  Agregar en el pom la dependencia del JAR comun:
+    <dependency>
+      <groupId>com.alquilereventos</groupId>
+      <artifactId>alquiler-eventos-common</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+  (requiere haber corrido "mvn clean install" en common antes)
+
+PASO 2. application.yml 100% configurable (nada de valores quemados)
+  spring:
+    datasource:
+      url: ${DB_URL}
+      username: ${DB_USER}
+      password: ${DB_PASSWORD}
+      driver-class-name: org.postgresql.Driver
+    jpa:
+      hibernate:
+        ddl-auto: validate
+    liquibase:
+      change-log: classpath:db/changelog/db.changelog-master.yaml
+  server:
+    port: ${SERVER_PORT:8082}          # 8081 para Tobi
+    servlet:
+      context-path: ${API_CONTEXT_PATH:/api}
+  app:
+    pagination:
+      default-page-size: ${DEFAULT_PAGE_SIZE:10}
+  logging:
+    config: ${LOGGING_CONFIG:classpath:logback-spring.xml}
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html
+  Las credenciales reales van en variables de entorno (o en un .env
+  local ignorado por git, NUNCA commiteado).
+
+PASO 3. Verificar arranque contra Supabase
+  Correr la app: Liquibase aplica los changeSets pendientes (17 y 18
+  en la primera corrida) e Hibernate valida las 16 entidades.
+  Si arranca sin errores, la base queda lista y validada.
+
+PASO 4. Capas por entidad (orden recomendado de codigo)
+  1) mapper: interfaz generica Mapper<E, D> con toDto(E) y toEntity(D)
+  2) service: interfaz + implementacion @Service
+  3) controller: @RestController que SOLO delega al service
+  4) exception: ApiExceptionHandler con @RestControllerAdvice
+  Regla de oro: Controller -> Service -> Repository, sin saltos.
+
+PASO 5. Entidad simple primero (Proveedor o Cliente): CRUD completo
+  con paginacion, filtros (usar los metodos buscar() del JAR) y
+  borrado logico. Probar todo por Swagger.
+
+PASO 6. Entidad principal (OrdenCompra o OrdenAlquiler): crear con
+  detalles (la M:N con cascade + orphanRemoval), filtros + paginado
+  con buscar() del JAR, cambio de estado con historial y borrado
+  logico ANULADA.
+
+PASO 7. Logs a disco (logback-spring.xml)
+  - Appender de archivo con rolling diario + ruta configurable
+    (ej. ${LOG_DIR:./logs}) + appender de consola para desarrollo.
+  - INFO para controller y service, DEBUG para el SQL:
+    logging.level.org.hibernate.SQL: DEBUG (configurable).
+
+PASO 8. README + pruebas finales
+  - Documentar variables de entorno y como correr.
+  - Probar TODOS los endpoints por Swagger verificando codigos
+    200 / 201 / 400 / 404.
+
+====================================================================
+SECCION 6 - REGLAS DE TRABAJO EN EQUIPO (GIT)
+====================================================================
+
+Repos de la organizacion (github.com/alquiler-eventos-org):
+  alquiler-eventos-common       -> compartido (PR obligatorio)
+  alquiler-eventos-ms-compras   -> Setrini (autonomia total)
+  alquiler-eventos-ms-alquiler  -> Tobi (autonomia total)
+  alquiler-eventos-ui           -> frontend (despues)
+
+- Common: cambios con rama feature/*, Pull Request y review del
+  otro antes del merge. Despues del merge, el otro hace git pull
+  + mvn clean install para actualizarse.
+- Cada microservicio: commits directos a su repo (o ramas por
+  feature si se prefiere).
+- Nunca commitear: .env, target/, logs/, archivos locales.
+- Mensajes de commit cortos y descriptivos (en espanol, como el
+  historial actual).
+- Rutina diaria: git pull en common y rebuild si hubo cambios.
+
+====================================================================
+SECCION 7 - CHECKLIST DE LA RUBRICA (control final)
+====================================================================
+
+POR MICROSERVICIO:
+[ ] Entidad simple con CRUD completo (Proveedor / Cliente)
+[ ] Entidad M:N gestionando correctamente la asociacion
+    (OrdenCompra<->Equipo / OrdenAlquiler<->Equipo via detalle)
+[ ] Capas estrictas Controller -> Service -> Repository (sin saltos)
+[ ] Una clase por entidad; repos/servicios de apoyo sin controller
+[ ] Jerarquia de clases (Mapper<E,D> generico; herencia del JAR)
+[ ] Entities y DTOs del JAR usados SIN modificar
+[ ] Mapeo bidireccional DTO <-> Entity
+[ ] POST 201 / PUT 200 / GET 200-404 / DELETE logico
+[ ] Listado con paginacion obligatoria
+[ ] Busqueda con filtros + paginacion obligatoria
+[ ] Maven resuelve el JAR common
+[ ] TODO configurable (application.yml + variables de entorno)
+[ ] Manejo central de excepciones (RestControllerAdvice + ApiError)
+[ ] Logs en disco INFO/DEBUG/ERROR por capa (SLF4J/Logback)
+[ ] Swagger documentando todos los endpoints
+[ ] Conexion a la BD remota compartida (Supabase)
+[ ] README con instrucciones de corrida
+
+====================================================================
+SECCION 8 - CRONOGRAMA SUGERIDO (hasta el 26/09)
+====================================================================
+
+Dia 1: (HECHO) ajustes de common + esta guia subida a GitHub.
+       Ambos: git pull de common + mvn clean install + JDK 21 listo.
+Dia 2: Ambos: proyecto base del microservicio arrancando contra
+       Supabase (Pasos 1 a 3 de la Seccion 5).
+Dia 3: Ambos: mapper + service + controller de la entidad simple,
+       con paginacion y borrado logico.
+Dia 4: Ambos: busqueda con filtros. Inicio de la entidad principal
+       (crear orden con detalles).
+Dia 5: Ambos: cambio de estado + historial (+ stock en compras,
+       stock/mora en alquiler).
+Dia 6: Ambos: manejo central de errores + logs a disco + Swagger
+       + README.
+Dia 7: Prueba integrada (los dos ms corriendo juntos sobre la misma
+       BD), repaso del checklist de la Seccion 7 y entrega.
+
+====================================================================
+NOTAS FINALES
+====================================================================
+- La fecha limite es 26 de septiembre. La Seccion 7 es el control
+  EXACTO de la rubrica: revisarla linea por linea antes de entregar.
+- Ante cualquier duda de diseno, conversarlo entre los dos ANTES de
+  programar (la rubrica lo pide explicitamente para los casos
+  especiales, como servicios de apoyo sin controller).
+- La autenticacion NO es requisito de la entrega 2: el usuarioId
+  llega en los requests (simplificacion a proposito para reducir
+  complejidad; JWT se evaluara mas adelante).
+- Todo debe ser CONFIGURABLE: si un valor esta quemado en el
+  codigo, es un punto perdido en la rubrica.
+====================================================================

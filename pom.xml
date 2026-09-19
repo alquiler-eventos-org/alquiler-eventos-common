@@ -91,6 +91,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- El JAR normal queda como libreria para los microservicios;
+                         el ejecutable se publica aparte con el clasificador "exec" -->
+                    <classifier>exec</classifier>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

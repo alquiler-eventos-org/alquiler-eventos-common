@@ -39,6 +39,12 @@ public class Cliente {
     @Column(columnDefinition = "TEXT")
     private String notas;
 
+    /**
+     * Borrado logico: false = eliminado.
+     */
+    @Column(nullable = false)
+    private Boolean activo = Boolean.TRUE;
+
     @OneToMany(mappedBy = "cliente", fetch = FetchType.LAZY)
     private List<OrdenAlquiler> ordenesAlquiler;
 }
