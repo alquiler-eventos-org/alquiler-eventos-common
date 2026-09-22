@@ -224,4 +224,4 @@ Progreso por pasos (en orden de implementación, reflejado en el historial de gi
 5. **PASO 5** — Preparación para la entrega 2: JAR como librería, borrado lógico,
    queries con filtros/paginación y DTOs de compras.
 6. **PASO 6** — DTOs y endpoints de `OrdenAlquiler` en `openapi.yaml` (rama
-   `feature/dto-orden-alquiler`, pendiente de PR).
+   `feature/dto-orden-alquiler`, mergeada a `main`).
