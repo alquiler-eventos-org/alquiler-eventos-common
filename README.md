@@ -120,10 +120,64 @@ En `application.yml`:
 
 ### DTOs y OpenAPI (`openapi.yaml`)
 
-En `openapi.yaml` hay una API de ejemplo sobre `Cliente` (listar, crear y obtener
-por id). Al compilar, el plugin `openapi-generator-maven-plugin` genera
-automáticamente los DTOs (`Cliente`, `ClienteCrearRequest`, `ApiError`, etc.) en
-`target/generated-sources/` dentro del paquete `com.alquilereventos.common.dto`.
+En `openapi.yaml` se definen **schemas y operaciones de ejemplo** para el módulo
+compartido. Al compilar, el plugin `openapi-generator-maven-plugin` genera
+automáticamente los DTOs en `target/generated-sources/openapi/` dentro del paquete
+`com.alquilereventos.common.dto`.
+
+DTOs disponibles actualmente:
+
+- **Clientes**: `Cliente`, `ClienteCrearRequest`, `ApiError`
+- **Proveedores**: `Proveedor`, `ProveedorCrearRequest`, `PageProveedor`
+- **Compras**: `OrdenCompra`, `OrdenCompraCrearRequest`, `OrdenCompraDetalle`,
+  `OrdenCompraEstadoRequest`, `PageOrdenCompra`, `EstadoOrdenCompra`
+- **Alquiler**: `OrdenAlquiler`, `OrdenAlquilerCrearRequest`, `OrdenAlquilerDetalle`,
+  `OrdenAlquilerEstadoRequest`, `PageOrdenAlquiler`, `EstadoOrdenAlquiler`
+
+> Los DTOs se generan SOLOS al compilar. **No se editan a mano**: cualquier cambio
+> se hace en `openapi.yaml` y se regenera con `mvn clean install`.
+
+### Cómo agregar DTOs (paso a paso)
+
+Este fue el procedimiento usado para incorporar los DTOs de `OrdenAlquiler`
+(feature `feature/dto-orden-alquiler`):
+
+1. **Editar `src/main/resources/openapi.yaml`**:
+   - Agregar bajo `components/schemas/` los objetos (con `type: object`, `properties`,
+     `required`, `example`) y los enums (`type: string` + `enum`).
+   - Marcar `readOnly: true` lo que el servidor calcula o genera (ej. `id`, `total`,
+     `createdAt`, `subtotal`): esos campos NO tendrán `setter` y entrarán por el
+     constructor generado.
+   - Si se quiere, documentar también los `paths` (solo referencia informativa:
+     `generateApis=false`, los microservicios implementan sus propios controllers).
+2. **Regenerar e instalar**:
+   ```bash
+   mvn clean install
+   ```
+   Deja el JAR actualizado en `~/.m2/repository/com/alquilereventos/...` para que
+   los microservicios lo consuman como dependencia.
+3. **Verificar la generación**:
+   Revisar los archivos nuevos en
+   `target/generated-sources/openapi/src/main/java/com/alquilereventos/common/dto/`
+   y confirmar los constructores/setters que usará el mapper del microservicio.
+4. **Publicar el cambio (regla del proyecto)**:
+   ```bash
+   git checkout -b feature/<nombre-que-describe-el-dto>
+   git add src/main/resources/openapi.yaml
+   git commit -m "Agrega DTOs de <dominio>"
+   git push -u origin feature/<nombre>
+   ```
+   Abrir el **Pull Request** hacia `main` desde GitHub y esperar la review del
+   otro integrante antes de mergear.
+5. **Sincronización del otro integrante** (después del merge):
+   ```bash
+   git pull
+   mvn clean install
+   ```
+
+> **Formato común a respetar en el yaml:** nombres de propiedades en camelCase que
+> coincidan con los atributos de las entidades (`equipoId`, `fechaEvento`,
+> `fechaDevolucion`, `precioDia`, ...) para simplificar el mapeo entity <-> dto.
 
 ---
 
@@ -167,3 +221,7 @@ Progreso por pasos (en orden de implementación, reflejado en el historial de gi
 2. **PASO 2** — Entidades JPA con Lombok, enums y jerarquía `HistorialEstado`.
 3. **PASO 3** — Repositorios Spring Data JPA, changelog Liquibase y `application.yml`.
 4. **PASO 4** — `openapi.yaml` con endpoints de ejemplo, generación de DTOs y verificación del build.
+5. **PASO 5** — Preparación para la entrega 2: JAR como librería, borrado lógico,
+   queries con filtros/paginación y DTOs de compras.
+6. **PASO 6** — DTOs y endpoints de `OrdenAlquiler` en `openapi.yaml` (rama
+   `feature/dto-orden-alquiler`, pendiente de PR).

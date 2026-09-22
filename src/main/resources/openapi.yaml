@@ -423,6 +423,193 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiError'
 
+  /ordenes-alquiler:
+    get:
+      tags:
+        - OrdenesAlquiler
+      summary: Obtiene el listado paginado de ordenes de alquiler con filtros
+      operationId: listarOrdenesAlquiler
+      parameters:
+        - name: estado
+          in: query
+          description: Filtro por estado de la orden
+          schema:
+            $ref: '#/components/schemas/EstadoOrdenAlquiler'
+        - name: clienteId
+          in: query
+          description: Filtro por cliente
+          schema:
+            type: integer
+            format: int32
+        - name: fechaDesde
+          in: query
+          description: Fecha del evento desde (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: fechaHasta
+          in: query
+          description: Fecha del evento hasta (inclusive)
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/TamanoPagina'
+      responses:
+        '200':
+          description: Pagina de ordenes de alquiler obtenida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOrdenAlquiler'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    post:
+      tags:
+        - OrdenesAlquiler
+      summary: Registra una nueva orden de alquiler con sus detalles
+      operationId: crearOrdenAlquiler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenAlquilerCrearRequest'
+      responses:
+        '201':
+          description: Orden de alquiler creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenAlquiler'
+        '400':
+          description: Datos de entrada invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /ordenes-alquiler/{id}:
+    get:
+      tags:
+        - OrdenesAlquiler
+      summary: Obtiene una orden de alquiler por su identificador
+      operationId: obtenerOrdenAlquilerPorId
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      responses:
+        '200':
+          description: Orden de alquiler encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenAlquiler'
+        '404':
+          description: Orden de alquiler no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      tags:
+        - OrdenesAlquiler
+      summary: Actualiza una orden de alquiler (solo si esta en RESERVA)
+      operationId: actualizarOrdenAlquiler
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenAlquilerCrearRequest'
+      responses:
+        '200':
+          description: Orden de alquiler actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenAlquiler'
+        '400':
+          description: La orden no puede modificarse en su estado actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Orden de alquiler no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    delete:
+      tags:
+        - OrdenesAlquiler
+      summary: Elimina logicamente una orden (estado ANULADA, solo si esta en RESERVA)
+      operationId: eliminarOrdenAlquiler
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      responses:
+        '200':
+          description: Orden de alquiler anulada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenAlquiler'
+        '400':
+          description: Solo pueden anularse ordenes en estado RESERVA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Orden de alquiler no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /ordenes-alquiler/{id}/estado:
+    put:
+      tags:
+        - OrdenesAlquiler
+      summary: Cambia el estado de la orden (ENTREGA, DEVOLUCION, MORA o ANULADA)
+      operationId: cambiarEstadoOrdenAlquiler
+      parameters:
+        - $ref: '#/components/parameters/IdEnPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdenAlquilerEstadoRequest'
+      responses:
+        '200':
+          description: Estado actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenAlquiler'
+        '400':
+          description: Transicion de estado invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Orden de alquiler no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
 components:
   parameters:
     Pagina:
@@ -631,6 +818,180 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Proveedor'
+        totalElementos:
+          type: integer
+          format: int64
+        numeroPagina:
+          type: integer
+          format: int32
+        tamanoPagina:
+          type: integer
+          format: int32
+
+    EstadoOrdenAlquiler:
+      type: string
+      description: Estados posibles de una orden de alquiler
+      enum:
+        - RESERVA
+        - ENTREGA
+        - DEVOLUCION
+        - MORA
+        - ANULADA
+
+    OrdenAlquilerDetalle:
+      type: object
+      description: Linea de detalle de una orden de alquiler
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Identificador unico del detalle
+        equipoId:
+          type: integer
+          format: int32
+          description: Identificador del equipo alquilado
+        equipoNombre:
+          type: string
+          readOnly: true
+          description: Nombre del equipo al momento del alquiler
+        cantidad:
+          type: integer
+          format: int32
+          minimum: 1
+        precioDia:
+          type: number
+          format: double
+          description: Precio por dia del equipo al momento del alquiler
+        dias:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Cantidad de dias del alquiler (calculada por el servidor)
+        subtotal:
+          type: number
+          format: double
+          readOnly: true
+          description: Calculado por el servidor (cantidad * precioDia * dias)
+      required:
+        - equipoId
+        - cantidad
+
+    OrdenAlquiler:
+      type: object
+      description: Orden de alquiler de equipos (cabecera con detalles)
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+          description: Identificador unico de la orden
+        clienteId:
+          type: integer
+          format: int32
+          description: Identificador del cliente
+        clienteNombre:
+          type: string
+          readOnly: true
+          description: Nombre completo del cliente
+        usuarioId:
+          type: integer
+          format: int32
+          description: Identificador del usuario que registro la orden
+        fechaEvento:
+          type: string
+          format: date
+          description: Fecha del evento (inicio del alquiler)
+        fechaDevolucion:
+          type: string
+          format: date
+          description: Fecha prevista de devolucion
+        estado:
+          $ref: '#/components/schemas/EstadoOrdenAlquiler'
+        total:
+          type: number
+          format: double
+          readOnly: true
+          description: Calculado por el servidor como suma de subtotales
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        detalles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdenAlquilerDetalle'
+      required:
+        - clienteId
+        - usuarioId
+        - fechaEvento
+        - detalles
+      example:
+        id: 1
+        clienteId: 1
+        usuarioId: 1
+        fechaEvento: "2026-09-25"
+        fechaDevolucion: "2026-09-27"
+        estado: RESERVA
+        total: 600.00
+        detalles:
+          - id: 1
+            equipoId: 1
+            equipoNombre: Parlante JBL EON
+            cantidad: 2
+            precioDia: 100.00
+            dias: 3
+            subtotal: 600.00
+
+    OrdenAlquilerCrearRequest:
+      type: object
+      description: Payload de entrada para registrar o actualizar una orden de alquiler
+      properties:
+        clienteId:
+          type: integer
+          format: int32
+        usuarioId:
+          type: integer
+          format: int32
+        fechaEvento:
+          type: string
+          format: date
+        fechaDevolucion:
+          type: string
+          format: date
+        detalles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrdenAlquilerDetalle'
+      required:
+        - clienteId
+        - usuarioId
+        - fechaEvento
+        - detalles
+
+    OrdenAlquilerEstadoRequest:
+      type: object
+      description: Payload para cambiar el estado de una orden de alquiler
+      properties:
+        usuarioId:
+          type: integer
+          format: int32
+          description: Identificador del usuario que realiza el cambio
+        estado:
+          $ref: '#/components/schemas/EstadoOrdenAlquiler'
+      required:
+        - usuarioId
+        - estado
+
+    PageOrdenAlquiler:
+      type: object
+      description: Pagina de resultados de ordenes de alquiler
+      properties:
+        contenido:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdenAlquiler'
         totalElementos:
           type: integer
           format: int64
