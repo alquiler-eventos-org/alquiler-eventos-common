@@ -16,13 +16,16 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Integer> {
     /**
      * Busqueda con filtros opcionales y paginacion.
      * Excluye siempre los proveedores con borrado logico (activo = false).
+     *
+     * Los filtros se CASTean a text: sin el cast, Hibernate envia el NULL como
+     * bytea y PostgreSQL falla con "function lower(bytea) does not exist".
      */
     @Query("""
             SELECT p FROM Proveedor p
             WHERE p.activo = true
-              AND (:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')))
-              AND (:email IS NULL OR LOWER(p.email) LIKE LOWER(CONCAT('%', :email, '%')))
-              AND (:contacto IS NULL OR LOWER(p.contacto) LIKE LOWER(CONCAT('%', :contacto, '%')))
+              AND (CAST(:nombre AS text) IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%')))
+              AND (CAST(:email AS text) IS NULL OR LOWER(p.email) LIKE LOWER(CONCAT('%', CAST(:email AS text), '%')))
+              AND (CAST(:contacto AS text) IS NULL OR LOWER(p.contacto) LIKE LOWER(CONCAT('%', CAST(:contacto AS text), '%')))
             """)
     Page<Proveedor> buscar(@Param("nombre") String nombre,
                            @Param("email") String email,
