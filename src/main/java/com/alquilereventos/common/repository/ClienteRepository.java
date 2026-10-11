@@ -18,14 +18,17 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     /**
      * Busqueda con filtros opcionales y paginacion.
      * Excluye siempre los clientes con borrado logico (activo = false).
+     *
+     * Los filtros se CASTean a text: sin el cast, Hibernate envia el NULL como
+     * bytea y PostgreSQL falla con "function lower(bytea) does not exist".
      */
     @Query("""
             SELECT c FROM Cliente c
             WHERE c.activo = true
-              AND (:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')))
-              AND (:apellido IS NULL OR LOWER(c.apellido) LIKE LOWER(CONCAT('%', :apellido, '%')))
-              AND (:documento IS NULL OR c.documento LIKE CONCAT('%', :documento, '%'))
-              AND (:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%')))
+              AND (CAST(:nombre AS text) IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%')))
+              AND (CAST(:apellido AS text) IS NULL OR LOWER(c.apellido) LIKE LOWER(CONCAT('%', CAST(:apellido AS text), '%')))
+              AND (CAST(:documento AS text) IS NULL OR c.documento LIKE CONCAT('%', CAST(:documento AS text), '%'))
+              AND (CAST(:email AS text) IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', CAST(:email AS text), '%')))
             """)
     Page<Cliente> buscar(@Param("nombre") String nombre,
                          @Param("apellido") String apellido,
