@@ -1097,12 +1097,9 @@ components:
 
     OrdenCompraCrearRequest:
       type: object
-      description: Payload de entrada para registrar o actualizar una orden de compra
+      description: Payload de entrada para registrar o actualizar una orden de compra. El usuario actor se obtiene exclusivamente del JWT.
       properties:
         proveedorId:
-          type: integer
-          format: int32
-        usuarioId:
           type: integer
           format: int32
         fechaCompra:
@@ -1115,7 +1112,6 @@ components:
             $ref: '#/components/schemas/OrdenCompraDetalle'
       required:
         - proveedorId
-        - usuarioId
         - fechaCompra
         - detalles
 
