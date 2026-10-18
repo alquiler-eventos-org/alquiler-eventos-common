@@ -659,3 +659,71 @@ databaseChangeLog:
                   defaultValueBoolean: true
                   constraints:
                     nullable: false
+
+  # Entrega 3: un usuario puede tener varios roles. Primero se conserva el
+  # rol existente en una tabla puente y despues se elimina la FK singular.
+  - changeSet:
+      id: 19-usuario-roles-multiples
+      author: alquilereventos
+      changes:
+        - createTable:
+            tableName: usuario_roles
+            columns:
+              - column:
+                  name: usuario_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_usuario_roles_usuario
+                    references: usuarios(id)
+              - column:
+                  name: rol_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_usuario_roles_rol
+                    references: roles(id)
+        - addUniqueConstraint:
+            tableName: usuario_roles
+            columnNames: usuario_id, rol_id
+            constraintName: uq_usuario_roles
+        - sql:
+            splitStatements: false
+            sql: INSERT INTO usuario_roles (usuario_id, rol_id) SELECT id, rol_id FROM usuarios WHERE rol_id IS NOT NULL
+        - dropForeignKeyConstraint:
+            baseTableName: usuarios
+            constraintName: fk_usuario_rol
+        - dropColumn:
+            tableName: usuarios
+            columnName: rol_id
+
+  - changeSet:
+      id: 20-agregar-activo-en-usuarios
+      author: alquilereventos
+      changes:
+        - addColumn:
+            tableName: usuarios
+            columns:
+              - column:
+                  name: activo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 21-semillas-roles-entrega-3
+      author: alquilereventos
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              INSERT INTO roles (nombre, descripcion, es_administrador)
+              SELECT 'ADMIN', 'Administracion completa del sistema', true
+              WHERE NOT EXISTS (SELECT 1 FROM roles WHERE nombre = 'ADMIN');
+              INSERT INTO roles (nombre, descripcion, es_administrador)
+              SELECT 'ENCARGADO_COMPRAS', 'Gestiona proveedores y ordenes de compra', false
+              WHERE NOT EXISTS (SELECT 1 FROM roles WHERE nombre = 'ENCARGADO_COMPRAS');
+              INSERT INTO roles (nombre, descripcion, es_administrador)
+              SELECT 'ENCARGADO_DEPOSITO', 'Gestiona clientes y ordenes de alquiler', false
+              WHERE NOT EXISTS (SELECT 1 FROM roles WHERE nombre = 'ENCARGADO_DEPOSITO');

@@ -6,7 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "roles")
@@ -28,6 +29,6 @@ public class Rol {
     @Column(nullable = false)
     private Boolean esAdministrador = false;
 
-    @OneToMany(mappedBy = "rol", fetch = FetchType.LAZY)
-    private List<Usuario> usuarios;
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    private Set<Usuario> usuarios = new HashSet<>();
 }
