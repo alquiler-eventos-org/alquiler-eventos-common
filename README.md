@@ -257,3 +257,10 @@ Cómo aplicar la migración una sola vez (paso a paso en `../GUIA-PRUEBAS-ENTREG
 cd alquiler-eventos-common
 mvn spring-boot:run    # con DB_URL/DB_USER/DB_PASSWORD cargados; cortar al ver "Started"
 ```
+
+> **Documentos compartidos del equipo** (viven en la carpeta del workspace, un
+> nivel arriba, junto a todos los repos; no están dentro de cada repo):
+> `README-ENTREGA-3.md` (plan y criterios de la Entrega 3),
+> `GUIA-PRUEBAS-ENTREGA-3.md` (demo paso a paso),
+> `GUIA-ADAPTAR-ENTREGA-3.md` (cómo replicar en `ms-alquiler`) y
+> `cambios-para-tobi.md`.
