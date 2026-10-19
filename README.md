@@ -225,3 +225,35 @@ Progreso por pasos (en orden de implementación, reflejado en el historial de gi
    queries con filtros/paginación y DTOs de compras.
 6. **PASO 6** — DTOs y endpoints de `OrdenAlquiler` en `openapi.yaml` (rama
    `feature/dto-orden-alquiler`, mergeada a `main`).
+7. **PASO 7 (Entrega 3)** — Modelo de seguridad: roles múltiples y baja lógica de
+   usuarios (detalle abajo).
+
+---
+
+## Cambios de la Entrega 3 (seguridad)
+
+Esta entrega es, en `common`, principalmente de **esquema y modelo** (el código
+de seguridad/caché vive en `ms-seguridad` y en cada micro). Se aplican vía
+Liquibase al arrancar cualquier app que consuma el JAR (los micros tienen
+Liquibase deshabilitado; solo `common` lo ejecuta).
+
+- **Tabla puente `usuario_roles(usuario_id, rol_id)`** con constraint único: un
+  usuario puede tener **varios roles**.
+- **Migración** del antiguo `usuarios.rol_id` (rol único) a `usuario_roles`; se
+  elimina la relación singular vieja.
+- **`usuarios.activo`** para **baja lógica** (el login y las consultas filtran
+  `activo = true`).
+- **Semilla de roles**: `ADMIN`, `ENCARGADO_COMPRAS`, `ENCARGADO_DEPOSITO`.
+- Entidades `Usuario.roles` y `Rol.usuarios` ahora son **`@ManyToMany`**.
+- El `usuarioId` de los requests de órdenes sigue en `openapi.yaml` por
+  compatibilidad, pero **cada micro debe tomar el actor del `uid` del JWT**.
+
+> Los DTOs de seguridad (login, token, usuario seguro, roles) viven dentro de
+> `ms-seguridad` (`com.alquilereventos.seguridad.dto`), no en este JAR.
+
+Cómo aplicar la migración una sola vez (paso a paso en `../GUIA-PRUEBAS-ENTREGA-3.md`):
+
+```powershell
+cd alquiler-eventos-common
+mvn spring-boot:run    # con DB_URL/DB_USER/DB_PASSWORD cargados; cortar al ver "Started"
+```
