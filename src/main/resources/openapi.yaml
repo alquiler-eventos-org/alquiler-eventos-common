@@ -945,12 +945,9 @@ components:
 
     OrdenAlquilerCrearRequest:
       type: object
-      description: Payload de entrada para registrar o actualizar una orden de alquiler
+      description: Payload de entrada para registrar o actualizar una orden de alquiler. El usuario actor se obtiene exclusivamente del JWT.
       properties:
         clienteId:
-          type: integer
-          format: int32
-        usuarioId:
           type: integer
           format: int32
         fechaEvento:
@@ -966,22 +963,16 @@ components:
             $ref: '#/components/schemas/OrdenAlquilerDetalle'
       required:
         - clienteId
-        - usuarioId
         - fechaEvento
         - detalles
 
     OrdenAlquilerEstadoRequest:
       type: object
-      description: Payload para cambiar el estado de una orden de alquiler
+      description: Payload para cambiar el estado de una orden de alquiler. El usuario actor se obtiene exclusivamente del JWT.
       properties:
-        usuarioId:
-          type: integer
-          format: int32
-          description: Identificador del usuario que realiza el cambio
         estado:
           $ref: '#/components/schemas/EstadoOrdenAlquiler'
       required:
-        - usuarioId
         - estado
 
     PageOrdenAlquiler:
