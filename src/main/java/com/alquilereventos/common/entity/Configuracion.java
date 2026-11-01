@@ -21,6 +21,6 @@ public class Configuracion {
     @Column(nullable = false, unique = true)
     private String clave;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String valor;
 }

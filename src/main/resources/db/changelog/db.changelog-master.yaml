@@ -727,3 +727,13 @@ databaseChangeLog:
               INSERT INTO roles (nombre, descripcion, es_administrador)
               SELECT 'ENCARGADO_DEPOSITO', 'Gestiona clientes y ordenes de alquiler', false
               WHERE NOT EXISTS (SELECT 1 FROM roles WHERE nombre = 'ENCARGADO_DEPOSITO');
+
+  - changeSet:
+      id: 22-configuraciones-valor-text
+      author: alquilereventos
+      comment: La plantilla de mail y el logotipo no entran en VARCHAR(255)
+      changes:
+        - modifyDataType:
+            tableName: configuraciones
+            columnName: valor
+            newDataType: TEXT
