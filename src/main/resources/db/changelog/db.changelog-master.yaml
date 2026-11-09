@@ -737,3 +737,30 @@ databaseChangeLog:
             tableName: configuraciones
             columnName: valor
             newDataType: TEXT
+
+  - changeSet:
+      id: 23-factura-compra-campos
+      author: alquilereventos
+      comment: La orden de compra pasa a ser una factura de compra (datos fiscales y condicion de pago)
+      changes:
+        - addColumn:
+            tableName: ordenes_compra
+            columns:
+              - column:
+                  name: numero_factura
+                  type: VARCHAR(30)
+              - column:
+                  name: ruc
+                  type: VARCHAR(20)
+              - column:
+                  name: ci
+                  type: VARCHAR(20)
+              - column:
+                  name: condicion_pago
+                  type: VARCHAR(10)
+              - column:
+                  name: fecha_vencimiento
+                  type: DATE
+              - column:
+                  name: observaciones
+                  type: VARCHAR(255)

@@ -39,6 +39,25 @@ public class OrdenCompra {
     @Column(nullable = false)
     private EstadoOrdenCompra estado = EstadoOrdenCompra.PENDIENTE;
 
+    @Column(name = "numero_factura", length = 30)
+    private String numeroFactura;
+
+    @Column(length = 20)
+    private String ruc;
+
+    @Column(length = 20)
+    private String ci;
+
+    /** CONTADO o CREDITO (texto; null en las ordenes anteriores a la factura). */
+    @Column(name = "condicion_pago", length = 10)
+    private String condicionPago;
+
+    @Column(name = "fecha_vencimiento")
+    private LocalDate fechaVencimiento;
+
+    @Column(length = 255)
+    private String observaciones;
+
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
 

@@ -1002,6 +1002,13 @@ components:
         - RECIBIDA
         - ANULADA
 
+    CondicionPago:
+      type: string
+      description: Condicion de pago de una factura de compra
+      enum:
+        - CONTADO
+        - CREDITO
+
     OrdenCompraDetalle:
       type: object
       description: Linea de detalle de una orden de compra
@@ -1053,6 +1060,27 @@ components:
         fechaCompra:
           type: string
           format: date
+        numeroFactura:
+          type: string
+          maxLength: 30
+          description: Numero de la factura del proveedor (ej. 001-001-0001234)
+        ruc:
+          type: string
+          maxLength: 20
+          description: RUC del proveedor que figura en la factura
+        ci:
+          type: string
+          maxLength: 20
+          description: Cedula de identidad (cuando el proveedor es persona fisica)
+        condicionPago:
+          $ref: '#/components/schemas/CondicionPago'
+        fechaVencimiento:
+          type: string
+          format: date
+          description: Vencimiento del pago (obligatorio si la condicion es CREDITO)
+        observaciones:
+          type: string
+          maxLength: 255
         estado:
           $ref: '#/components/schemas/EstadoOrdenCompra'
         total:
@@ -1096,6 +1124,27 @@ components:
         fechaCompra:
           type: string
           format: date
+        numeroFactura:
+          type: string
+          maxLength: 30
+          description: Numero de la factura del proveedor (ej. 001-001-0001234)
+        ruc:
+          type: string
+          maxLength: 20
+          description: RUC del proveedor que figura en la factura
+        ci:
+          type: string
+          maxLength: 20
+          description: Cedula de identidad (cuando el proveedor es persona fisica)
+        condicionPago:
+          $ref: '#/components/schemas/CondicionPago'
+        fechaVencimiento:
+          type: string
+          format: date
+          description: Vencimiento del pago (obligatorio si la condicion es CREDITO)
+        observaciones:
+          type: string
+          maxLength: 255
         detalles:
           type: array
           minItems: 1
